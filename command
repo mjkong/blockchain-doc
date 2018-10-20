@@ -17,6 +17,9 @@ docker exec -it cli bash
 ###### Blockchain network 중지
 ./byfn.sh down
 
+###### 채널명 환경변수 셋팅
+export CHANNEL_NAME=mychannel
+
 ###### chaincode query
 peer chaincode query -C $CHANNEL_NAME -n mycc -c '{"Args":["query","a"]}'
 
