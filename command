@@ -1,6 +1,10 @@
 
 https://drive.google.com/open?id=1UjcqvmqYeebAY9YCqIHCOsw-Xsavclia
 
+##### docker container 중지, 삭제
+docker stop $(docker ps -qa ) && docker rm $(docker ps -qa)
+
+
 ###### 샘플 경로
 /home/bcadmin/fabric-samples/first-network/
 
