@@ -50,3 +50,60 @@ export CHANNEL_NAME=mychannel
 
 ##### Fabric Network 시작
 docker-compose -f docker-compose-cli.yaml up -d
+
+
+
+=================================== composer ===================================
+com.example.mynetwork.cto
+/**
+ * My commodity trading network
+ */
+namespace org.example.mynetwork
+asset Commodity identified by tradingSymbol {
+    o String tradingSymbol
+    o String description
+    o String mainExchange
+    o Double quantity
+    --> Trader owner
+}
+participant Trader identified by tradeId {
+    o String tradeId
+    o String firstName
+    o String lastName
+}
+transaction Trade {
+    --> Commodity commodity
+    --> Trader newOwner
+}
+
+lib/logic.js 
+/**
+ * Track the trade of a commodity from one trader to another
+ * @param {org.example.mynetwork.Trade} trade - the trade to be processed
+ * @transaction
+ */
+async function tradeCommodity(trade) {
+    trade.commodity.owner = trade.newOwner;
+    let assetRegistry = await getAssetRegistry('org.example.mynetwork.Commodity');
+    await assetRegistry.update(trade.commodity);
+}
+
+permissions.acl 
+/**
+ * Access control rules for tutorial-network
+ */
+rule Default {
+    description: "Allow all participants access to all resources"
+    participant: "ANY"
+    operation: ALL
+    resource: "org.example.mynetwork.*"
+    action: ALLOW
+}
+
+rule SystemACL {
+  description:  "System ACL to permit all access"
+  participant: "ANY"
+  operation: ALL
+  resource: "org.hyperledger.composer.system.**"
+  action: ALLOW
+}
