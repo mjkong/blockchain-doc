@@ -52,6 +52,11 @@ export CHANNEL_NAME=mychannel
 docker-compose -f docker-compose-cli.yaml up -d
 
 
+##### create channel
+peer channel create -o orderer.example.com:7050 -c $CHANNEL_NAME -f ./channel-artifacts/channel.tx --tls $CORE_PEER_TLS_ENABLED --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
+
+
+
 
 =================================== composer ===================================
 com.example.mynetwork.cto
