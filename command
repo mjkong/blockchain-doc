@@ -1,4 +1,7 @@
-
+# Fetch bootstrap.sh from fabric repository using
+curl -sS https://raw.githubusercontent.com/hyperledger/fabric/master/scripts/bootstrap.sh -o ./scripts/bootstrap.sh
+# Change file mode to executable
+chmod +x ./scripts/bootstrap.sh
 
 ##### docker container 중지, 삭제
 docker stop $(docker ps -qa ) && docker rm $(docker ps -qa)
