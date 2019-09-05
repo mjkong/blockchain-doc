@@ -26,6 +26,9 @@ docker exec -it cli bash
 ###### 채널명 환경변수 셋팅
 export CHANNEL_NAME=mychannel
 
+##### chaincoe install
+peer chaincode install -n mycc -v 1.0 -p github.com/chaincode/chaincode_example02/go/
+
 ##### chaincode instantiate
 peer chaincode instantiate -o orderer.example.com:7050 --tls $CORE_PEER_TLS_ENABLED --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n mycc -v 1.0 -c '{"Args":["init","a", "100", "b","200"]}' -P “AND ('Org1MSP.member','Org2MSP.member')"
 
