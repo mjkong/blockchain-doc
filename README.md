@@ -149,9 +149,66 @@ crypto-config.yaml 파일에 필요한 네트워크 토폴로지를 작성해서
     ~~~
     정상적으로 실행되었으면 아래 스크린샷과 같이 6개의 컨테이너를 확인 할 수 있습니다.   
     ![](./images/start_container.png)
-1. 채널 생성
-1. 채널에 피어 참여
-1. Anchor 피어 설정
-1. 체인코드 설치
-1. 체인코드 초기화
-1. 트랜잭션 테스트
+
+1. 채널 생성   
+정상적으로 컨테이너들이 실행이 되었으면 Fabric network를 설정합니다. 이 단계에서는 채널 생성, 채널에 피어 참여, Anchor 피어 설정의 단계로 이루어져 있습니다.    
+우선 채널 생성을 해 봅니다. 채널 생성을 하기 위해서는 CLI 컨테이너로 접속합니다.
+    ~~~shell
+    docker exec -it cli bash
+    ~~~
+    CLI 컨테이너에 접속하였으면 다음의 채널 생성 명령을 실행합니다.
+    ~~~shell
+    export CHANNEL_NAME=mychannel
+    peer channel create -o orderer.example.com:7050 -c $CHANNEL_NAME -f ./channel-artifacts/channel.tx --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
+    ~~~
+
+1. 채널에 피어 참여   
+앞선 단계에서 채널이 정상적으로 생성되었으면 `mychannel`에서 트랜잭션을 처리할 피어들을 `join`합니다.    
+CLI에서 원격으로 명령을 실행하므로 `join`하고자 하는 `peer`에 명령을 실행하기에 앞서 `참조 환경 변수`에서 해당하는 `peer`의 환경 변수를 우선 CLI 컨테이너에 적용하고 `peer join` 명령을 실행합니다.
+    ~~~shell
+    peer channel join -b mychannel.block
+    ~~~
+
+1. Anchor 피어 설정   
+모든 `peer`를 `join` 시켰으면 `Anchor` 피어를 설정합니다. Anchor 피어는 각 조직의 `peer0` 입니다.(configtx.yaml 파일 참조)
+    > `Anchor` 피어 설정도 각 피어에 명령 실행전 해당하는 피어의 환경변수 설정을 해야합니다.   
+
+    ~~~shell
+    ## peer0.org1
+    peer channel update -o orderer.example.com:7050 -c $CHANNEL_NAME -f ./channel-artifacts/Org1MSPanchors.tx --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
+
+    ## peer0.org2
+    CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp CORE_PEER_ADDRESS=peer0.org2.example.com:9051 CORE_PEER_LOCALMSPID="Org2MSP" CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt peer channel update -o orderer.example.com:7050 -c $CHANNEL_NAME -f ./channel-artifacts/Org2MSPanchors.tx --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
+    ~~~
+    `Anchor`피어까지 업데이트 하였으면 Fabric Network 설정이 완료되었습니다. 다음으로 체인코드를 설치하고 초기화 시켜보겠습니다.
+
+1. 체인코드 설치  
+Golang 기반의 체인코드를 설치해보겠습니다. 
+    ~~~shell
+    ## peer0.org1 환경변수 설정 후
+    peer chaincode install -n mycc -v 1.0 -p github.com/chaincode/chaincode_example02/go/
+
+    ## peer0.org2 환경변수 설정 후
+    peer chaincode install -n mycc -v 1.0 -p github.com/chaincode/chaincode_example02/go/
+    ~~~
+
+1. 체인코드 초기화   
+앞서 두 개의 피어에 체인코드를 설정하였으면 다음 명령을 통해서 체인코드를 초기화합니다. 초기화는 특정 버전의 체인코드를 사용하겠다고 Fabric network의 채널에 알려주는 동작이며, 동시에 Endorsement policy로 설정합니다.
+    ~~~shell
+    ## peer0.org1 환경변수 설정 후
+
+    peer chaincode instantiate -o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n mycc -v 1.0 -c '{"Args":["init","a", "100", "b","200"]}' -P "AND ('Org1MSP.peer','Org2MSP.peer')"
+    ~~~
+
+1. 트랜잭션 테스트   
+정상적으로 체인코드 초기화까지 되었으면 다음 `query`, `invoke` 등의 명령을 통해서 값의 변화를 테스트 해봅니다.
+    ~~~shell
+    ## a 값 query
+    peer chaincode query -C $CHANNEL_NAME -n mycc -c '{"Args":["query","a"]}'
+
+    ## b 값 query
+    peer chaincode query -C $CHANNEL_NAME -n mycc -c '{"Args":["query","a"]}'
+
+    ## invoke
+    peer chaincode invoke -o orderer.example.com:7050 --tls true --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n mycc --peerAddresses peer0.org1.example.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt --peerAddresses peer0.org2.example.com:9051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt -c '{"Args":["invoke","a","b","10"]}'
+    ~~~
