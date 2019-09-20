@@ -212,3 +212,22 @@ Golang 기반의 체인코드를 설치해보겠습니다.
     ## invoke
     peer chaincode invoke -o orderer.example.com:7050 --tls true --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n mycc --peerAddresses peer0.org1.example.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt --peerAddresses peer0.org2.example.com:9051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt -c '{"Args":["invoke","a","b","10"]}'
     ~~~
+
+실습 완료 후 다음 명령을 통해서 실습한 모든 컨테이너를 종료합니다.
+~~~shell
+### ~/fabric-samples/first-network 디렉토리로 이동
+./byfn.sh down
+~~~
+
+## Fabric SDK 실습
+SDK 실습을 위해서 Fabcar 시나리오를 활용하여 Nodejs SDK 실습을 합니다.
+fabcar 실습을 위해서 다음의 디렉토리로 이동합니다.
+~~~shell
+cd ~/fabric-samples/fabcar
+~~~
+
+그리고 다음 명령을 실행하여 Fabcar 실습을 위한 Fabric network를 실행합니다.
+~~~shell
+./startFabric.sh
+~~~
+
