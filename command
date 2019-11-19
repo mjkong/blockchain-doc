@@ -1,3 +1,6 @@
+#### git checkout 명령
+git checkout mymarket-1.4
+
 # Fetch bootstrap.sh from fabric repository using
 curl -sS https://raw.githubusercontent.com/hyperledger/fabric/master/scripts/bootstrap.sh -o ./scripts/bootstrap.sh
 # Change file mode to executable
