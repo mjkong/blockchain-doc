@@ -1,3 +1,9 @@
+##### network 실행
+docker-compose -f docker-compose-cli.yaml up -d
+
+docker exec -it cli bash
+
+
 #### git checkout 명령
 git checkout mymarket-1.4
 
