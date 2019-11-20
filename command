@@ -1,3 +1,7 @@
+#### 필요 sw 설치 
+snap install postman
+sudo apt install gradle
+
 ##### network 실행
 export COMPOSE_PROJECT_NAME=test
 docker-compose -f docker-compose-cli.yaml up -d
@@ -5,6 +9,8 @@ docker-compose up -d
 
 docker exec -it cli bash
 
+#### chaincode query 
+peer chaincode query -C $CHANNEL_NAME -n marketcc -c '{"Args":["getProductList",""]}'
 
 #### git checkout 명령
 git checkout mymarket-1.4
