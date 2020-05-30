@@ -1,19 +1,7 @@
+==================================  Fabric 테스트를 위한 샘플 환경 설정  ===============================================
 #### 필요 sw 설치 
 snap install postman
 sudo apt install gradle
-
-##### network 실행
-export COMPOSE_PROJECT_NAME=test
-docker-compose -f docker-compose-cli.yaml up -d
-docker-compose up -d
-
-docker exec -it cli bash
-
-#### chaincode invoke
-peer chaincode invoke -o orderer.mymarket.com:7050 --tls true --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/mymarket.com/orderers/orderer.mymarket.com/msp/tlscacerts/tlsca.mymarket.com-cert.pem -C $CHANNEL_NAME -n marketcc --peerAddresses peer0.store1.mymarket.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/store1.mymarket.com/peers/peer0.store1.mymarket.com/tls/ca.crt --peerAddresses peer0.store2.mymarket.com:9051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/store2.mymarket.com/peers/peer0.store2.mymarket.com/tls/ca.crt -c '{"Args":["registProducts","PD100","400","store1"]}'
-
-#### chaincode query 
-peer chaincode query -C $CHANNEL_NAME -n marketcc -c '{"Args":["getProductList",""]}'
 
 #### git checkout 명령
 git checkout mymarket-1.4
@@ -25,38 +13,6 @@ chmod +x ./scripts/bootstrap.sh
 
 ##### docker container 중지, 삭제
 docker stop $(docker ps -qa ) && docker rm $(docker ps -qa)
-
-
-###### 샘플 경로
-/home/bcadmin/fabric-samples/first-network/
-
-###### Blockchain network 실행
-./byfn.sh generate
-./byfn.sh up
-
-###### 컨테이너 리스트 확인
-docker ps
-
-###### cli 접속 명령
-docker exec -it cli bash
-
-###### Blockchain network 중지
-./byfn.sh down
-
-###### 채널명 환경변수 셋팅
-export CHANNEL_NAME=mychannel
-
-##### chaincoe install
-peer chaincode install -n mycc -v 1.0 -p github.com/chaincode/chaincode_example02/go/
-
-##### chaincode instantiate
-peer chaincode instantiate -o orderer.example.com:7050 --tls $CORE_PEER_TLS_ENABLED --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n mycc -v 1.0 -c '{"Args":["init","a", "100", "b","200"]}' -P “AND ('Org1MSP.member','Org2MSP.member')"
-
-###### chaincode query
-peer chaincode query -C $CHANNEL_NAME -n mycc -c '{"Args":["query","a"]}'
-
-###### chaincode invoke
-peer chaincode invoke -o orderer.example.com:7050 --tls true --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n mycc --peerAddresses peer0.org1.example.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt --peerAddresses peer0.org2.example.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt -c '{"Args":["invoke","a","b","10"]}'
 
 ==================================  Fabric network custom 설정  ===============================================
 ##### 기존 설정 파일 삭제하기
@@ -80,10 +36,14 @@ export CHANNEL_NAME=mychannel
 ##### Fabric Network 시작
 docker-compose -f docker-compose-cli.yaml up -d
 
+##### Cli 컨테이너 접속
+docker exec -it cli bash
 
 ##### create channel
 peer channel create -o orderer.example.com:7050 -c $CHANNEL_NAME -f ./channel-artifacts/channel.tx --tls $CORE_PEER_TLS_ENABLED --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
 
+##### channel join
+peer channel join -b $CHANNEL_NAME.block
 
 ### peer0.org1
 CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
@@ -113,6 +73,41 @@ CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/c
 peer channel create -o orderer.example.com:7050 -c $CHANNEL_NAME -f ./channel-artifacts/Org1MSPanchors.tx --tls $CORE_PEER_TLS_ENABLED --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
 
 peer channel create -o orderer.example.com:7050 -c $CHANNEL_NAME -f ./channel-artifacts/Org2MSPanchors.tx --tls $CORE_PEER_TLS_ENABLED --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
+
+==================================  Chaincode 설치 및 시작  ===============================================
+
+###### 채널명 환경변수 셋팅
+export CHANNEL_NAME=mychannel
+
+##### chaincoe install
+peer chaincode install -n mycc -v 1.0 -p github.com/chaincode/chaincode_example02/go/
+
+##### chaincode instantiate
+peer chaincode instantiate -o orderer.example.com:7050 --tls $CORE_PEER_TLS_ENABLED --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n mycc -v 1.0 -c '{"Args":["init","a", "100", "b","200"]}' -P “AND ('Org1MSP.member','Org2MSP.member')"
+
+###### chaincode query
+peer chaincode query -C $CHANNEL_NAME -n mycc -c '{"Args":["query","a"]}'
+
+###### chaincode invoke
+peer chaincode invoke -o orderer.example.com:7050 --tls true --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n mycc --peerAddresses peer0.org1.example.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt --peerAddresses peer0.org2.example.com:9051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt -c '{"Args":["invoke","a","b","10"]}'
+
+==================================  ETC  ===============================================
+
+###### 샘플 경로
+/home/bcadmin/fabric-samples/first-network/
+
+###### Blockchain network 실행
+./byfn.sh generate
+./byfn.sh up
+
+###### 컨테이너 리스트 확인
+docker ps
+
+###### cli 접속 명령
+docker exec -it cli bash
+
+###### Blockchain network 중지
+./byfn.sh down
 
 =================================== composer ===================================
 com.example.mynetwork.cto
@@ -168,3 +163,10 @@ rule SystemACL {
   resource: "org.hyperledger.composer.system.**"
   action: ALLOW
 }
+
+
+#### chaincode invoke
+peer chaincode invoke -o orderer.mymarket.com:7050 --tls true --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/mymarket.com/orderers/orderer.mymarket.com/msp/tlscacerts/tlsca.mymarket.com-cert.pem -C $CHANNEL_NAME -n marketcc --peerAddresses peer0.store1.mymarket.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/store1.mymarket.com/peers/peer0.store1.mymarket.com/tls/ca.crt --peerAddresses peer0.store2.mymarket.com:9051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/store2.mymarket.com/peers/peer0.store2.mymarket.com/tls/ca.crt -c '{"Args":["registProducts","PD100","400","store1"]}'
+
+#### chaincode query 
+peer chaincode query -C $CHANNEL_NAME -n marketcc -c '{"Args":["getProductList",""]}'
